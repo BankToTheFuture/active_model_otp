@@ -15,7 +15,7 @@ module ActiveModel
         self.otp_counter_column_name = (options[:counter_column_name] || "otp_counter").to_s
 
         include InstanceMethodsOnActivation
-
+        include EncryptionInstanceMethods if options[:encrypted] == true
         before_create do
           self.otp_regenerate_secret if !otp_column
           self.otp_regenerate_counter if otp_counter_based && !otp_counter
@@ -110,12 +110,80 @@ module ActiveModel
           super
         end
       end
+    end
 
-      def serializable_hash(options = nil)
-        options ||= {}
-        options[:except] = Array(options[:except])
-        options[:except] << self.class.otp_column_name
-        super(options)
+    module EncryptionInstanceMethods
+      def otp_secret_key
+        decrypt(encrypted_otp_secret_key)
+      end
+
+      def otp_secret_key=(value)
+        self.encrypted_otp_secret_key = encrypt(value)
+      end
+
+      private
+
+      def decrypt(encrypted_value)
+        return encrypted_value if encrypted_value.blank?
+
+        encrypted_value = encrypted_value.unpack('m').first
+
+        value = ::Encryptor.decrypt(encryption_options_for(encrypted_value))
+
+        if defined?(Encoding)
+          encoding = Encoding.default_internal || Encoding.default_external
+          value = value.force_encoding(encoding.name)
+        end
+
+        value
+      end
+
+      def encrypt(value)
+        return value if value.blank?
+
+        value = value.to_s
+        encrypted_value = ::Encryptor.encrypt(encryption_options_for(value))
+
+        encrypted_value = [encrypted_value].pack('m')
+
+        encrypted_value
+      end
+
+      def encryption_options_for(value)
+        {
+          value: value,
+          key: Devise.otp_secret_encryption_key,
+          iv: iv_for_attribute,
+          salt: salt_for_attribute
+        }
+      end
+
+      def iv_for_attribute(algorithm = 'aes-256-cbc')
+        iv = encrypted_otp_secret_key_iv
+
+        if iv.nil?
+          algo = OpenSSL::Cipher::Cipher.new(algorithm)
+          iv = [algo.random_iv].pack('m')
+          self.encrypted_otp_secret_key_iv = iv
+        end
+
+        iv.unpack('m').first if iv.present?
+      end
+
+      def salt_for_attribute
+        salt = encrypted_otp_secret_key_salt ||
+               self.encrypted_otp_secret_key_salt = generate_random_base64_encoded_salt
+
+        decode_salt_if_encoded(salt)
+      end
+
+      def generate_random_base64_encoded_salt
+        prefix = '_'
+        prefix + [SecureRandom.random_bytes].pack('m')
+      end
+
+      def decode_salt_if_encoded(salt)
+        salt.slice(0).eql?('_') ? salt.slice(1..-1).unpack('m').first : salt
       end
     end
   end
