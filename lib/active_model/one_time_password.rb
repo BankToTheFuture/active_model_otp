@@ -21,7 +21,7 @@ module ActiveModel
           self.otp_regenerate_counter if otp_counter_based && !otp_counter
         end
 
-        if respond_to?(:attributes_protected_by_default)
+        if respond_to?(:attributes_protected_by_default) 
           def self.attributes_protected_by_default #:nodoc:
             super + [otp_column_name, otp_counter_column_name]
           end
