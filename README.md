@@ -22,7 +22,7 @@ Or install it yourself as follows:
 
     $ gem install active_model_otp
 
-## Setting your Model
+## Setting your Devise Model
 
 We're going to add a field to our ``User`` Model, so each user can have an otp secret key. The next step is to run the migration generator in order to add the secret key field.
 
@@ -37,22 +37,57 @@ We’ll then need to run rake db:migrate to update the users table in the databa
 
 ```ruby
 class User < ActiveRecord::Base
+    
+  devise :one_time_password
+
   has_one_time_password
 end
 ```
 
 Note: If you're adding this to an existing user model you'll need to generate *otp_secret_key* with a migration like:
 ```ruby
-User.all.each { |user| user.update_attribute(:otp_secret_key, ROTP::Base32.random_base32) }
+User.all.find_each { |user| user.update_attribute(:otp_secret_key, ROTP::Base32.random_base32) }
 ```
 
 To use a custom column to store the secret key field you can use the column_name option. It is also possible to generate codes with a specified length.
 
 ```ruby
 class User < ActiveRecord::Base
+  devise :one_time_password
+  
   has_one_time_password column_name: :my_otp_secret_column, length: 4
 end
 ```
+
+## Setting Encryption/Decryption
+
+Our extension provides ability to encrypt/decrypt ``otp_secret_key`` to have addictional DB protection, so we're going to add attribute ``encrypted`` to our initialize method ``has_one_time_password``.
+
+```ruby
+class User < ActiveRecord::Base
+  devise :one_time_password
+  
+  has_one_time_password encrypted: true
+end
+```
+In this configuration we have to change our DB scheme by adding addictional 2 columns.
+
+```ruby
+class AddEncryptionForOtpSecretKey < ActiveRecord::Migration
+  def change
+    rename_column :users, :otp_secret_key, :encrypted_otp_secret_key
+    
+    add_column :users, :encrypted_otp_secret_key_iv, :string
+    add_column :users, :encrypted_otp_secret_key_salt, :string
+  end
+end
+```
+
+Note: If you're adding this to an existing user model you'll need to regenerate *encrypted_otp_secret_key* with a migration like:
+```ruby
+User.all.find_each { |user| user.update_attribute(:encrypted_otp_secret_key, ROTP::Base32.random_base32) }
+```
+Note2: Note that column name ``otp_secret_key`` is changed to ``encrypted_otp_secret_key``.
 
 ## Usage
 
@@ -161,36 +196,6 @@ user.provisioning_uri(nil, issuer: 'MYAPP') #=> 'otpauth://totp/hello@heapsource
 ```
 
 This can then be rendered as a QR Code which can be scanned and added to the users list of OTP credentials.
-
-### Working example
-
-Scan the following barcode with your phone, using Google Authenticator
-
-![QRCODE](http://qrfree.kaywa.com/?l=1&s=8&d=otpauth%3A%2F%2Ftotp%2Froberto%40heapsource.com%3Fsecret%3D2z6hxkdwi3uvrnpn)
-
-Now run the following and compare the output
-
-```ruby
-require "active_model_otp"
-
-class User
-  extend ActiveModel::Callbacks
-  include ActiveModel::Validations
-  include ActiveModel::OneTimePassword
-
-  define_model_callbacks :create
-  attr_accessor :otp_secret_key, :email
-
-  has_one_time_password
-end
-
-user = User.new
-user.email = 'roberto@heapsource.com'
-user.otp_secret_key = "2z6hxkdwi3uvrnpn"
-puts "Current code #{user.otp_code}"
-```
-
-**Note:** otp_secret_key must be generated using RFC 3548 base32 key strings (for compatilibity with google authenticator)
 
 ### Useful Examples
 
