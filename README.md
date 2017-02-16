@@ -12,7 +12,7 @@
 
 Add this line to your application's Gemfile:
 
-    gem 'active_model_otp'
+    gem 'active_model_otp', git: 'https://github.com/gtalkowski/active_model_otp'
 
 And then execute:
 
