@@ -15,4 +15,4 @@ module Devise
   @@otp_secret_encryption_key = ''
 end
 
-Devise.add_module :two_factor_authenticatable, model: 'active_model/one_time_password'
+Devise.add_module :one_time_password, model: 'active_model/one_time_password'
