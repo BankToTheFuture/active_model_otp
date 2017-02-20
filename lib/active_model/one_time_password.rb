@@ -118,7 +118,6 @@ module Devise
       module EncryptionInstanceMethods
         def otp_secret_key
             decrypt(encrypted_otp_secret_key) rescue nil
-          end
         end
 
         def otp_secret_key=(value)
