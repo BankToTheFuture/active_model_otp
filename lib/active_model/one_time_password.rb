@@ -117,11 +117,11 @@ module Devise
 
       module EncryptionInstanceMethods
         def otp_secret_key
-            decrypt(encrypted_otp_secret_key) rescue nil
+            decrypt(encrypted_otp_secret_key) rescue ''
         end
 
         def otp_secret_key=(value)
-          self.encrypted_otp_secret_key = encrypt(value) rescue nil
+          self.encrypted_otp_secret_key = encrypt(value) rescue ''
         end
 
         private
