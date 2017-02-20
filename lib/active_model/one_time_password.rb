@@ -117,19 +117,12 @@ module Devise
 
       module EncryptionInstanceMethods
         def otp_secret_key
-          begin
-            decrypt(encrypted_otp_secret_key)
-          rescue => error
-            error.backtrace
+            decrypt(encrypted_otp_secret_key) rescue nil
           end
         end
 
         def otp_secret_key=(value)
-          begin
-            self.encrypted_otp_secret_key = encrypt(value)
-          rescue => error
-            error.backtrace
-          end
+          self.encrypted_otp_secret_key = encrypt(value) rescue nil
         end
 
         private
