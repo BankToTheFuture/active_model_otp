@@ -165,12 +165,12 @@ module Devise
           iv = encrypted_otp_secret_key_iv
 
           if iv.nil?
-            algo = OpenSSL::Cipher::Cipher.new(algorithm)
-            iv = [algo.random_iv].pack('m')
+            algo = OpenSSL::Cipher.new(algorithm)
+            iv = [algo.random_iv[0,12]].pack('m')
             self.encrypted_otp_secret_key_iv = iv
           end
 
-          iv.unpack('m').first if iv.present?
+          iv.unpack('m').first[0,12] if iv.present?
         end
 
         def salt_for_attribute

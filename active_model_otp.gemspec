@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "activemodel"
-  spec.add_dependency "rotp"
+  spec.add_dependency "rotp", '~> 3.0'
   spec.add_dependency 'encryptor', '~> 3.0'
 
   spec.add_development_dependency "activerecord"
