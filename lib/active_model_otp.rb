@@ -6,9 +6,9 @@ require "active_model/one_time_password"
 require 'devise'
 require 'encryptor'
 
-# ActiveSupport.on_load(:active_record) do
-#   include ActiveModel::OneTimePassword
-# end
+ActiveSupport.on_load(:active_record) do
+  include Devise::Models::OneTimePassword
+end
 
 module Devise
   mattr_accessor :otp_secret_encryption_key

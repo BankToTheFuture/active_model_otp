@@ -1,9 +1,8 @@
 class User
   extend ActiveModel::Callbacks
   include ActiveModel::Serializers::JSON
-  include ActiveModel::Serializers::Xml
   include ActiveModel::Validations
-  include ActiveModel::OneTimePassword
+  include Devise::Models::OneTimePassword
 
   define_model_callbacks :create
   attr_accessor :otp_secret_key, :email

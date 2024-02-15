@@ -1,3 +1,5 @@
+require 'devise'
+
 module Devise
   module Models
     module OneTimePassword
@@ -53,7 +55,7 @@ module Devise
           else
             totp = ROTP::TOTP.new(otp_column, digits: otp_digits)
             if drift = options[:drift]
-              totp.verify_with_drift(code, drift)
+              totp.verify(code, drift_behind: drift || 0)
             else
               totp.verify(code)
             end
@@ -70,12 +72,10 @@ module Devise
           else
             if options.is_a? Hash
               time = options.fetch(:time, Time.now)
-              padding = options.fetch(:padding, true)
             else
               time = options
-              padding = true
             end
-            ROTP::TOTP.new(otp_column, digits: otp_digits).at(time, padding)
+            ROTP::TOTP.new(otp_column, digits: otp_digits).at(time)
           end
         end
 
@@ -112,6 +112,14 @@ module Devise
           else
             super
           end
+        end
+
+        def serializable_hash(options = nil)
+          options ||= {}
+          options[:except] = Array(options[:except])
+          options[:except] << self.class.otp_column_name
+
+          super(options)
         end
       end
 
