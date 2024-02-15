@@ -1,7 +1,7 @@
 class Member
   extend ActiveModel::Callbacks
   include ActiveModel::Validations
-  include ActiveModel::OneTimePassword
+  include Devise::Models::OneTimePassword
 
   define_model_callbacks :create
   attr_accessor :otp_secret_key, :otp_counter, :email

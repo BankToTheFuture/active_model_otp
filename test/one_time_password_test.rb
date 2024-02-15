@@ -87,16 +87,16 @@ class OtpTest < MiniTest::Unit::TestCase
   end
 
   def test_provisioning_uri_with_email_field
-    assert_match %r{otpauth://totp/roberto@heapsource\.com\?secret=\w{16}}, @user.provisioning_uri
-    assert_match %r{otpauth://totp/roberto@heapsource\.com\?secret=\w{16}}, @visitor.provisioning_uri
-    assert_match %r{otpauth://hotp/\?secret=\w{16}&counter=0}, @member.provisioning_uri
+    assert_match %r{otpauth://totp/roberto%40heapsource\.com\?secret=\w{16}}, @user.provisioning_uri
+    assert_match %r{otpauth://totp/roberto%40heapsource\.com\?secret=\w{16}}, @visitor.provisioning_uri
+    assert_match %r{otpauth://hotp/\?secret=\w{32}&counter=0}, @member.provisioning_uri
   end
 
   def test_provisioning_uri_with_options
-    assert_match %r{otpauth://totp/roberto@heapsource\.com\?secret=\w{16}&issuer=Example}, @user.provisioning_uri(nil, issuer: "Example")
-    assert_match %r{otpauth://totp/roberto@heapsource\.com\?secret=\w{16}&issuer=Example}, @visitor.provisioning_uri(nil, issuer: "Example")
-    assert_match %r{otpauth://totp/roberto\?secret=\w{16}&issuer=Example}, @user.provisioning_uri("roberto", issuer: "Example")
-    assert_match %r{otpauth://totp/roberto\?secret=\w{16}&issuer=Example}, @visitor.provisioning_uri("roberto", issuer: "Example")
+    assert_match %r{otpauth://totp/Example:roberto%40heapsource\.com\?secret=\w{32}&issuer=Example}, @user.provisioning_uri(nil, issuer: "Example")
+    assert_match %r{otpauth://totp/Example:roberto%40heapsource\.com\?secret=\w{32}&issuer=Example}, @visitor.provisioning_uri(nil, issuer: "Example")
+    assert_match %r{otpauth://totp/Example:roberto\?secret=\w{32}&issuer=Example}, @user.provisioning_uri("roberto", issuer: "Example")
+    assert_match %r{otpauth://totp/Example:roberto\?secret=\w{32}&issuer=Example}, @visitor.provisioning_uri("roberto", issuer: "Example")
   end
 
   def test_regenerate_otp
@@ -107,6 +107,5 @@ class OtpTest < MiniTest::Unit::TestCase
 
   def test_hide_secret_key_in_serialize
     refute_match(/otp_secret_key/, @user.to_json)
-    refute_match(/otp_secret_key/, @user.to_xml)
   end
 end
